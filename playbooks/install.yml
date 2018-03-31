@@ -2,6 +2,9 @@
 - hosts: all
   become: yes
 
+  vars:
+    source_dir: '/opt/wiki-graphs'
+
   tasks:
     - name: Install Git
       package:
@@ -11,7 +14,7 @@
     - name: Clone the GitHub repository
       git:
         repo: 'https://github.com/allisonking/wiki-graphs.git'
-        dest: '/opt/wiki-graphs'
+        dest: '{{ source_dir }}'
 
     - name: Add public GPG key for MongoDB (required for ubuntu packaging)
       apt_key:
@@ -33,7 +36,22 @@
         name: mongod
         state: started
 
-    - name: Export NYT API key
-      lineinfile:
-        path: /etc/environment
-        line: 'NYT_API_KEY={{ NYT_API_KEY }}'
+    - name: Install python3 virtual environment package
+      package:
+        name: python3.4-venv
+        state: present
+
+    - name: Install pip requirements
+      pip:
+        requirements: '{{ source_dir }}/requirements.txt'
+        virtualenv: '{{ source_dir }}/venv'
+        virtualenv_command: /usr/bin/python3 -m venv
+
+    # - name: Seed the database
+    #   command: chdir='{{ source_dir }}' venv/bin/python3 app/db/seeds.py
+
+    - name: Start the flask app
+      shell: '{{ source_dir }}/venv/bin/flask run --host=0.0.0.0 &'
+      environment:
+        FLASK_APP: '{{ source_dir }}/wikigraph.py'
+        NYT_API_KEY: '{{ NYT_API_KEY }}'
