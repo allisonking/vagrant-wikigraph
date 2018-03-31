@@ -47,11 +47,12 @@
         virtualenv: '{{ source_dir }}/venv'
         virtualenv_command: /usr/bin/python3 -m venv
 
-    # - name: Seed the database
-    #   command: chdir='{{ source_dir }}' venv/bin/python3 app/db/seeds.py
+    - name: Seed the database
+      command: chdir='{{ source_dir }}' venv/bin/python3 app/db/seeds.py
 
-    - name: Start the flask app
-      shell: '{{ source_dir }}/venv/bin/flask run --host=0.0.0.0 &'
-      environment:
-        FLASK_APP: '{{ source_dir }}/wikigraph.py'
-        NYT_API_KEY: '{{ NYT_API_KEY }}'
+    - name: Start flask app with gunicorn
+      gunicorn:
+        app: wikigraph
+        chdir: '{{ source_dir }}'
+        venv: '{{ source_dir }}/venv'
+        conf: '/vagrant_data/gunicorn.cfg'
