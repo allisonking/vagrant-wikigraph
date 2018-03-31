@@ -1,0 +1,39 @@
+---
+- hosts: all
+  become: yes
+
+  tasks:
+    - name: Install Git
+      package:
+        name: git-all
+        state: present
+
+    - name: Clone the GitHub repository
+      git:
+        repo: 'https://github.com/allisonking/wiki-graphs.git'
+        dest: '/opt/wiki-graphs'
+
+    - name: Add public GPG key for MongoDB (required for ubuntu packaging)
+      apt_key:
+        id: 2930ADAE8CAF5059EE73BB4B58712A2291FA4AD5
+        keyserver: hkp://keyserver.ubuntu.com:80
+
+    - name: Add the MongoDB repo
+      apt_repository:
+        repo: 'deb https://repo.mongodb.org/apt/ubuntu {{ansible_distribution_release}}/mongodb-org/3.6 multiverse'
+        state: present
+
+    - name: Install MongoDB
+      apt:
+        name: mongodb-org
+        update_cache: yes
+
+    - name: Start MongoDB
+      service:
+        name: mongod
+        state: started
+
+    - name: Export NYT API key
+      lineinfile:
+        path: /etc/environment
+        line: 'NYT_API_KEY={{ NYT_API_KEY }}'
