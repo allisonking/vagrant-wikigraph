@@ -56,3 +56,5 @@
         chdir: '{{ source_dir }}'
         venv: '{{ source_dir }}/venv'
         conf: '/vagrant_data/gunicorn.cfg'
+      environment:
+        NYT_API_KEY: '{{ NYT_API_KEY }}'
